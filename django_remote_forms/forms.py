@@ -1,4 +1,5 @@
 from django.utils.datastructures import SortedDict
+from django import forms
 
 from django_remote_forms import fields, logger
 from django_remote_forms.utils import resolve_promise
@@ -91,7 +92,7 @@ class RemoteForm(object):
                     'max_length': 'number',
                     'min_length: 'number',
                     'required': False,
-                    'bound_data': 'data'
+                    'data': 'data'
                     'widget': {
                         'attr': 'value'
                     }
@@ -152,4 +153,34 @@ class RemoteForm(object):
         else:
             form_dict['data'] = initial_data
 
+        form_dict['nested'] = {}
+
+        if hasattr(self.form, 'nested'):
+            for name, form in self.form.nested.items():
+                if isinstance(form, forms.formsets.BaseFormSet):
+
+                    # handle the empty form
+                    empty_form = form.empty_form
+                    empty_form.fields['id'].choices = []
+                    empty_form = RemoteForm(empty_form).as_dict()
+
+                    # create a dict to hold our forms
+                    form_dict['nested'][form.prefix] = {
+                        'empty_form': empty_form,
+                        'management_form': self.process_nested_form(form.management_form, form_dict)
+                    }
+                    for formset_form in form.forms:
+                        formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
+                        form_dict['nested'][form.prefix][formset_form.prefix] = self.process_nested_form(formset_form, form_dict)
+                else:
+                    form_dict['nested'][form.prefix] = self.process_nested_form(form, form_dict)
+
         return resolve_promise(form_dict)
+
+    def process_nested_form(self, form, form_dict):
+        nested_dict = RemoteForm(form).as_dict()
+        for key, val in nested_dict['data'].items():
+            newKey = form.prefix + '-' + key.replace(form.prefix, '')  # the keys get jacked up sometimes. Clean them up
+            form_dict['data'][newKey] = val
+
+        return nested_dict

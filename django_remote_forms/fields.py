@@ -28,7 +28,7 @@ class RemoteField(object):
         field_dict['title'] = self.field.__class__.__name__
         field_dict['required'] = self.field.required
         field_dict['label'] = self.field.label
-        field_dict['initial'] = self.form_initial_data or self.field.initial
+        field_dict['initial'] = self.form_initial_data if self.form_initial_data is not None else self.field.initial
         field_dict['help_text'] = self.field.help_text
 
         field_dict['error_messages'] = self.field.error_messages
@@ -70,7 +70,6 @@ class RemoteIntegerField(RemoteField):
             'max_value': self.field.max_value,
             'min_value': self.field.min_value
         })
-
         return field_dict
 
 
