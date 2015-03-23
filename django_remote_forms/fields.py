@@ -28,7 +28,7 @@ class RemoteField(object):
         field_dict['title'] = self.field.__class__.__name__
         field_dict['required'] = self.field.required
         field_dict['label'] = self.field.label
-        field_dict['initial'] = self.form_initial_data or self.field.initial
+        field_dict['initial'] = self.form_initial_data if self.form_initial_data is not None else self.field.initial
         field_dict['help_text'] = self.field.help_text
 
         field_dict['error_messages'] = self.field.error_messages
@@ -70,7 +70,6 @@ class RemoteIntegerField(RemoteField):
             'max_value': self.field.max_value,
             'min_value': self.field.min_value
         })
-
         return field_dict
 
 
@@ -195,7 +194,7 @@ class RemoteTypedChoiceField(RemoteChoiceField):
         field_dict = super(RemoteTypedChoiceField, self).as_dict()
 
         field_dict.update({
-            'coerce': self.field.coerce,
+            'coerce': self.field.coerce.__name__,
             'empty_value': self.field.empty_value
         })
 
@@ -217,7 +216,7 @@ class RemoteTypedMultipleChoiceField(RemoteMultipleChoiceField):
         field_dict = super(RemoteTypedMultipleChoiceField, self).as_dict()
 
         field_dict.update({
-            'coerce': self.field.coerce,
+            'coerce': self.field.coerce.__name__,
             'empty_value': self.field.empty_value
         })
 
