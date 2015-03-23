@@ -275,3 +275,7 @@ class RemoteIPAddressField(RemoteCharField):
 class RemoteSlugField(RemoteCharField):
     def as_dict(self):
         return super(RemoteSlugField, self).as_dict()
+
+
+class RemoteInlineForeignKeyField(RemoteField):
+    pass
