@@ -158,10 +158,10 @@ class RemoteForm(object):
         if hasattr(self.form, 'nested'):
             if isinstance(self.form.nested, dict):
                 for form in self.form.nested.itervalues():
-                    _get_nested_formset_dict(form, form_dict)
+                    self._get_nested_formset_dict(form, form_dict)
             else:
                 for form in self.form.nested.forms:
-                    _get_nested_formset_dict(form, form_dict)
+                    self._get_nested_formset_dict(form, form_dict)
 
         return resolve_promise(form_dict)
 
