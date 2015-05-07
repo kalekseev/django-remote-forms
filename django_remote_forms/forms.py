@@ -160,8 +160,7 @@ class RemoteForm(object):
                 for form in self.form.nested.itervalues():
                     self._get_nested_formset_dict(form, form_dict)
             else:
-                for form in self.form.nested.forms:
-                    self._get_nested_formset_dict(form, form_dict)
+                self._get_nested_formset_dict(self.form.nested, form_dict)
 
         return resolve_promise(form_dict)
 
