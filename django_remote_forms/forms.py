@@ -158,15 +158,14 @@ class RemoteForm(object):
         if hasattr(self.form, 'nested'):
             if isinstance(self.form.nested, dict):
                 for form in self.form.nested.itervalues():
-                    self._get_nested_formset_dict(form, form_dict)
+                    self.get_nested_formset_dict(form, form_dict)
             else:
-                self._get_nested_formset_dict(self.form.nested, form_dict)
+                self.get_nested_formset_dict(self.form.nested, form_dict)
 
         return resolve_promise(form_dict)
 
-    def _get_nested_formset_dict(self,form, form_dict):
+    def get_nested_formset_dict(self, form, form_dict):
         if isinstance(form, forms.formsets.BaseFormSet):
-
             # handle the empty form
             empty_form = form.empty_form
             empty_form.fields['id'].choices = []
