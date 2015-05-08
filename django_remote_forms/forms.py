@@ -175,7 +175,7 @@ class RemoteForm(object):
         if isinstance(form, forms.formsets.BaseFormSet):
             nested_dict = self.get_formset_dict(form, form_dict)
         else:
-            nested_dict[form.prefix] = self.process_nested_form(form, form_dict)
+            nested_dict[form.prefix] = self.process_nested_form(form)
         return nested_dict
 
     def get_formset_dict(self, form, form_dict):
@@ -188,16 +188,12 @@ class RemoteForm(object):
         # create a dict to hold our forms
         nested_dict[form.prefix] = {
             'empty_form': empty_form,
-            'management_form': self.process_nested_form(form.management_form, form_dict)
+            'management_form': self.process_nested_form(form.management_form)
         }
         for formset_form in form.forms:
             formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
-            nested_dict[form.prefix][formset_form.prefix] = self.process_nested_form(formset_form, form_dict)
+            nested_dict[form.prefix][formset_form.prefix] = self.process_nested_form(formset_form)
 
-    def process_nested_form(self, form, form_dict):
+    def process_nested_form(self, form):
         nested_dict = RemoteForm(form).as_dict()
-        for key, val in nested_dict['data'].items():
-            newKey = form.prefix + '-' + key.replace(form.prefix, '')  # the keys get jacked up sometimes. Clean them up
-            form_dict['data'][newKey] = val
-
         return nested_dict
