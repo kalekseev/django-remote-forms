@@ -104,7 +104,7 @@ class RemoteForm(object):
         """
         form_dict = SortedDict()
         if isinstance(self.form, forms.formsets.BaseFormSet):
-            form_dict = self.get_formset_dict(self.form, form_dict)
+            form_dict = self.get_formset_dict(self.form)
             return form_dict
         form_dict['title'] = self.form.__class__.__name__
         form_dict['non_field_errors'] = self.form.non_field_errors()
@@ -173,12 +173,12 @@ class RemoteForm(object):
     def get_nested_formset_dict(self, form, form_dict):
         nested_dict = {}
         if isinstance(form, forms.formsets.BaseFormSet):
-            nested_dict = self.get_formset_dict(form, form_dict)
+            nested_dict = self.get_formset_dict(form)
         else:
             nested_dict[form.prefix] = self.process_nested_form(form)
         return nested_dict
 
-    def get_formset_dict(self, form, form_dict):
+    def get_formset_dict(self, form):
         nested_dict = {}
         # handle the empty form
         empty_form = form.empty_form
@@ -193,6 +193,7 @@ class RemoteForm(object):
         for formset_form in form.forms:
             formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
             nested_dict[form.prefix][formset_form.prefix] = self.process_nested_form(formset_form)
+        return nested_dict
 
     def process_nested_form(self, form):
         nested_dict = RemoteForm(form).as_dict()
