@@ -192,7 +192,8 @@ class RemoteForm(object):
         }
         for formset_form in form.forms:
             formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
-            nested_dict[form.prefix][formset_form.prefix] = self.process_nested_form(formset_form)
+            forms = nested_dict[form.prefix].setdefault('forms', [])
+            forms.append(self.process_nested_form(formset_form))
         return nested_dict
 
     def process_nested_form(self, form):
