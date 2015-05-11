@@ -167,7 +167,7 @@ class RemoteForm(object):
 
         return resolve_promise(form_dict)
 
-    def get_form_data_without_prefix(form, initial_data):
+    def get_form_data_without_prefix(self, form, initial_data):
         """
         Provides form data, for bounded forms that are returned to the client with errors.
         :return: a dict with form data, where keys are the name fields and values are the
