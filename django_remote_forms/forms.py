@@ -153,10 +153,7 @@ class RemoteForm(object):
 
             initial_data[name] = form_dict['fields'][name]['initial']
 
-        if self.form.data:
-            form_dict['data'] = self.form.data
-        else:
-            form_dict['data'] = initial_data
+        form_dict['data'] = self.get_form_data_without_prefix(self.form, initial_data)
 
         form_dict['nested'] = {}
 
@@ -169,6 +166,22 @@ class RemoteForm(object):
                 form_dict['nested'] = self.get_nested_formset_dict(self.form.nested, form_dict)
 
         return resolve_promise(form_dict)
+
+    def get_form_data_without_prefix(form, initial_data):
+        """
+        Provides form data, for bounded forms that are returned to the client with errors.
+        :return: a dict with form data, where keys are the name fields and values are the
+        POSTed values.
+        """
+        ret_dict = {}
+        if form.data and form.prefix is not None:
+            for data_key, data_value in form.data.iteritems():
+                field_name = data_key.replace(form.prefix + '-', '')
+                ret_dict[field_name] = data_value
+        else:
+            ret_dict = initial_data
+        return ret_dict
+
 
     def get_nested_formset_dict(self, form, form_dict):
         nested_dict = {}
