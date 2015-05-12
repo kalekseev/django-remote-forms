@@ -175,9 +175,10 @@ class RemoteForm(object):
         """
         ret_dict = {}
         if form.data and form.prefix is not None:
-            for data_key, data_value in form.data.iteritems():
-                field_name = data_key.replace(form.prefix + '-', '')
-                ret_dict[field_name] = data_value
+            for field_name in form.fields.keys():
+                data_key = "%s-%s" % (form.prefix, field_name)
+                if data_key in form.data:
+                    ret_dict[field_name] = form.data.get(data_key)
         else:
             ret_dict = initial_data
         return ret_dict
