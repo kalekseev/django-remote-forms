@@ -8,6 +8,8 @@ from django_remote_forms.utils import resolve_promise
 class RemoteForm(object):
     def __init__(self, form, *args, **kwargs):
         self.form = form
+        if isinstance(form, forms.formsets.BaseFormSet):
+            return
 
         self.all_fields = set(self.form.fields.keys())
 
@@ -101,6 +103,9 @@ class RemoteForm(object):
         }
         """
         form_dict = SortedDict()
+        if isinstance(self.form, forms.formsets.BaseFormSet):
+            form_dict = self.get_formset_dict(self.form)
+            return form_dict
         form_dict['title'] = self.form.__class__.__name__
         form_dict['non_field_errors'] = self.form.non_field_errors()
         form_dict['label_suffix'] = self.form.label_suffix
@@ -148,39 +153,63 @@ class RemoteForm(object):
 
             initial_data[name] = form_dict['fields'][name]['initial']
 
-        if self.form.data:
-            form_dict['data'] = self.form.data
-        else:
-            form_dict['data'] = initial_data
+        form_dict['data'] = self.get_form_data_without_prefix(self.form, initial_data)
 
         form_dict['nested'] = {}
 
         if hasattr(self.form, 'nested'):
-            for name, form in self.form.nested.items():
-                if isinstance(form, forms.formsets.BaseFormSet):
-
-                    # handle the empty form
-                    empty_form = form.empty_form
-                    empty_form.fields['id'].choices = []
-                    empty_form = RemoteForm(empty_form).as_dict()
-
-                    # create a dict to hold our forms
-                    form_dict['nested'][form.prefix] = {
-                        'empty_form': empty_form,
-                        'management_form': self.process_nested_form(form.management_form, form_dict)
-                    }
-                    for formset_form in form.forms:
-                        formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
-                        form_dict['nested'][form.prefix][formset_form.prefix] = self.process_nested_form(formset_form, form_dict)
-                else:
-                    form_dict['nested'][form.prefix] = self.process_nested_form(form, form_dict)
+            if isinstance(self.form.nested, dict):
+                for form in self.form.nested.itervalues():
+                    form_dict['nested'] = form_dict.setdefault('nested', {})
+                    form_dict.update(self.get_nested_formset_dict(form, form_dict))
+            else:
+                form_dict['nested'] = self.get_nested_formset_dict(self.form.nested, form_dict)
 
         return resolve_promise(form_dict)
 
-    def process_nested_form(self, form, form_dict):
-        nested_dict = RemoteForm(form).as_dict()
-        for key, val in nested_dict['data'].items():
-            newKey = form.prefix + '-' + key.replace(form.prefix, '')  # the keys get jacked up sometimes. Clean them up
-            form_dict['data'][newKey] = val
+    def get_form_data_without_prefix(self, form, initial_data):
+        """
+        Provides form data, for bounded forms that are returned to the client with errors.
+        :return: a dict with form data, where keys are the name fields and values are the
+        POSTed values.
+        """
+        ret_dict = {}
+        if form.data and form.prefix is not None:
+            for field_name in form.fields.keys():
+                data_key = "%s-%s" % (form.prefix, field_name)
+                if data_key in form.data:
+                    ret_dict[field_name] = form.data.get(data_key)
+        else:
+            ret_dict = initial_data
+        return ret_dict
 
+
+    def get_nested_formset_dict(self, form, form_dict):
+        nested_dict = {}
+        if isinstance(form, forms.formsets.BaseFormSet):
+            nested_dict = self.get_formset_dict(form)
+        else:
+            nested_dict[form.prefix] = self.process_nested_form(form)
+        return nested_dict
+
+    def get_formset_dict(self, form):
+        nested_dict = {}
+        # handle the empty form
+        empty_form = form.empty_form
+        empty_form.fields['id'].choices = []
+        empty_form = RemoteForm(empty_form).as_dict()
+
+        # create a dict to hold our forms
+        nested_dict[form.prefix] = {
+            'empty_form': empty_form,
+            'management_form': self.process_nested_form(form.management_form)
+        }
+        for formset_form in form.forms:
+            formset_form.fields['id'].choices = []  # formset adds choices to the id, which can make for some ugly long queries
+            forms = nested_dict[form.prefix].setdefault('forms', [])
+            forms.append(self.process_nested_form(formset_form))
+        return nested_dict
+
+    def process_nested_form(self, form):
+        nested_dict = RemoteForm(form).as_dict()
         return nested_dict
