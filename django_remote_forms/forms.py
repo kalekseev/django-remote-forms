@@ -134,7 +134,7 @@ class RemoteForm(object):
             # in order to retrieve the field contents as a dictionary.
             remote_field_class_name = 'Remote%s' % field.__class__.__name__
             try:
-                remote_field_class = getattr(fields, remote_field_class_name)
+                remote_field_class = getattr(fields, remote_field_class_name, fields.RemoteField)
                 remote_field = remote_field_class(field, form_initial_field_data, field_name=name)
             except Exception, e:
                 logger.warning('Error serializing field %s: %s', remote_field_class_name, str(e))
