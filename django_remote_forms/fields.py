@@ -25,7 +25,7 @@ class RemoteField(object):
 
     def as_dict(self):
         field_dict = OrderedDict()
-        field_dict['title'] = self.field.__class__.__name__
+        field_dict['type'] = self.field.__class__.__name__
         field_dict['required'] = self.field.required
         field_dict['label'] = self.field.label
         field_dict['initial'] = self.form_initial_data if self.form_initial_data is not None else self.field.initial

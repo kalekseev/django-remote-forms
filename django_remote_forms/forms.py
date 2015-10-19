@@ -106,7 +106,7 @@ class RemoteForm(object):
         if isinstance(self.form, forms.formsets.BaseFormSet):
             form_dict = self.get_formset_dict(self.form)
             return form_dict
-        form_dict['title'] = self.form.__class__.__name__
+        form_dict['type'] = self.form.__class__.__name__
         form_dict['non_field_errors'] = self.form.non_field_errors()
         form_dict['label_suffix'] = self.form.label_suffix
         form_dict['is_bound'] = self.form.is_bound
