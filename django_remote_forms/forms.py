@@ -84,17 +84,17 @@ class RemoteForm(object):
             'label_suffix': ':',
             'is_bound': False,
             'prefix': 'text'.
+            'errors': {},
+            'data': {},
             'fields': {
                 'name': {
                     'type': 'type',
-                    'errors': {},
                     'help_text': 'text',
                     'label': 'text',
                     'initial': 'data',
                     'max_length': 'number',
                     'min_length: 'number',
                     'required': False,
-                    'data': 'data'
                     'widget': {
                         'attr': 'value'
                     }
@@ -169,14 +169,17 @@ class RemoteForm(object):
 
     def get_form_data_without_prefix(self, form, initial_data):
         """
-        Provides form data, for bounded forms that are returned to the client with errors.
+        Provides form data, for bound forms that are returned to the client with errors.
         :return: a dict with form data, where keys are the name fields and values are the
         POSTed values.
         """
         ret_dict = {}
-        if form.data and form.prefix is not None:
+        if form.data is not None:
             for field_name in form.fields.keys():
-                data_key = "%s-%s" % (form.prefix, field_name)
+                if form.prefix is not None:
+                    data_key = "%s-%s" % (form.prefix, field_name)
+                else:
+                    data_key = field_name
                 if data_key in form.data:
                     ret_dict[field_name] = form.data.get(data_key)
         else:
