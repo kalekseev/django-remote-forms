@@ -1,6 +1,7 @@
 import datetime
 
 from django.conf import settings
+from django.utils.dateparse import date_re as iso_date_re
 from collections import OrderedDict
 
 from django_remote_forms import logger, widgets
@@ -278,3 +279,14 @@ class RemoteSlugField(RemoteCharField):
 
 class RemoteInlineForeignKeyField(RemoteField):
     pass
+
+
+class RemoteIsoDateField(RemoteRegexField):
+    def as_dict(self):
+        field_dict = super(RemoteRegexField, self).as_dict()
+        initial = field_dict.get('initial')
+        if initial:
+            match = iso_date_re.match(initial)
+            date_format = '{month}/{day}/{year}'
+            field_dict['initial'] = date_format.format(**match.groupdict())
+        return field_dict
