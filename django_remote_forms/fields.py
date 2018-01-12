@@ -283,7 +283,7 @@ class RemoteInlineForeignKeyField(RemoteField):
 
 class RemoteIsoDateField(RemoteRegexField):
     def as_dict(self):
-        field_dict = super(RemoteRegexField, self).as_dict()
+        field_dict = super(RemoteIsoDateField, self).as_dict()
         initial = field_dict.get('initial')
         if initial:
             match = iso_date_re.match(initial)
